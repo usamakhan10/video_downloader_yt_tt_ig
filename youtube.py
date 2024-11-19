@@ -8,12 +8,14 @@ def clean_title(folder_path):
     os.makedirs(folder_path, exist_ok=True)
     for file in os.listdir(folder_path):
         if file.endswith(".mp4"):
+            title = file.replace(".mp4","")
             # Remove hashtags and associated words
             title = re.sub(r'#\w+', '', title)
             # Remove any special characters
             title = re.sub(r'[<>:"/\\|?*]', '', title)
             # Remove extra spaces and trim
             title = re.sub(r'\s+', ' ', title).strip()
+            title = title + ".mp4"
             os.rename(os.path.join(folder_path, file), os.path.join(folder_path, title))
             
 
