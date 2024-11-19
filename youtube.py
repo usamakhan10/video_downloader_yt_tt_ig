@@ -70,7 +70,6 @@ def download_channel_videos(channel_url,download_shorts=True,download_videos=Tru
 
 if __name__ == "__main__":
     channel_url = "@Darklavia"
-    channel_url = "@usama2777"
     download_channel_videos(channel_url,download_shorts=True,download_videos=False)
     watermark = Watermark()
     folder_path = "youtube_downloads/"+channel_url.replace("@","")
