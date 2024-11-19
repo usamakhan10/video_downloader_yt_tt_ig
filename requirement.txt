@@ -1,0 +1,8 @@
+seleniumbase
+yt_dlp
+instaloader
+blinker == 1.7.0
+tqdm
+requests
+urllib.request
+
