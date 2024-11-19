@@ -41,7 +41,6 @@ def download_channel_videos(channel_url,download_shorts=True,download_videos=Tru
         'progress': True,
         'playlistend': None,
         'extract_flat': 'in_playlist',
-        'progress_hooks': [lambda d: clean_title(d['filename'])],
     }
 
     # First, get all videos from the channel
