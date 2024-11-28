@@ -154,7 +154,21 @@ class TikTokScraper:
             urllib.request.urlretrieve(video_url, filepath)
             print(f"Successfully downloaded using alternative method: {filename}")
             return True
-
+    
+    def generate_video_list(self,channel_name, videos_folder="tiktok_downloads/"):
+        """Generate a text file listing all video titles in the videos folder"""
+        video_files = [f for f in os.listdir(videos_folder) if f.endswith('.mp4')]
+        os.makedirs(f"{videos_folder}", exist_ok=True)
+        with open(f'{videos_folder}/video_list_{channel_name}.txt', 'w', encoding='utf-8') as f:
+            for idx, video in enumerate(video_files, 1):
+                # Remove .mp4 extension and format the line
+                title = video.replace('.mp4', '')
+                f.write(f"Day_{idx} {title}\n")
+                os.rename(f"{videos_folder}/{video}", f"{videos_folder}/day_{idx}_{title}.mp4")
+        
+        print(f"Video list has been generated in video_list_{channel_name}.txt")
+        
+        
 if __name__ == "__main__":
     url = "https://www.tiktok.com/@rankingdaily"
     channel_name = url.split('@')[1].replace('/', '')
@@ -164,4 +178,4 @@ if __name__ == "__main__":
     tiktok_scraper.play_and_download_video(tiktok_urls,video_names)
     watermark = Watermark()
     watermark.process_videos_from_folder("./tiktok_downloads/"+channel_name, "./tiktok_downloads/"+channel_name)
-    
+    tiktok_scraper.generate_video_list(channel_name, "./tiktok_downloads/"+channel_name)

@@ -12,13 +12,22 @@ class VideoConfig:
 
 class Watermark:
     def __init__(self):
+        # We'll set the font sizes later based on frame height
+        self.font = None
+        self.font_large = None
+        
+    def _initialize_fonts(self, frame_width: int):
+        # Scale font sizes based on frame height
+        base_font_size = int(frame_width /24) 
+        large_font_size = int(frame_width /14) 
+        
         try:
-            self.font = ImageFont.truetype("Rowdies-Regular.ttf", 60)
-            self.font_large = ImageFont.truetype("Rowdies-Regular.ttf", 100)
+            self.font = ImageFont.truetype("Rowdies-Regular.ttf", base_font_size)
+            self.font_large = ImageFont.truetype("Rowdies-Regular.ttf", large_font_size)
         except:
             # Fallback to default font if Rowdies isn't available
-            self.font = ImageFont.load_default()
-            self.font_large = ImageFont.load_default()
+            self.font = ImageFont.load_default(size=base_font_size)
+            self.font_large = ImageFont.load_default(size=large_font_size)
     
     def spring(self, frame: int, stiffness: float = 100) -> float:
         omega = np.sqrt(stiffness)
@@ -34,21 +43,42 @@ class Watermark:
     def add_watermark(self, frame: np.ndarray, frame_number: int) -> np.ndarray:
         # Convert frame to PIL Image
         frame_pil = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        frame_width = frame_pil.size[0]
+        frame_height = frame_pil.size[1]
         
+        # Initialize fonts if not already done
+        if self.font is None:
+            self._initialize_fonts(frame_width)
+            
         # Create transparent overlay
         overlay = Image.new('RGBA', frame_pil.size, (0, 0, 0, 0))
         draw = ImageDraw.Draw(overlay)
         
         # Calculate animation
         spring_value = self.spring(frame_number)
-        y_position = int(self.interpolate(spring_value, [0, 1], [-300, 0]))
+        # Scale the y-position range based on frame height
+        y_position = int(self.interpolate(spring_value, [0, 1], [-frame_height * 0.3, 0]))
         
-        # Draw text
-        base_y = 100 + y_position
-        draw.text((100, base_y), "AI shorts with", 
-                 font=self.font, fill=(255, 255, 255, 204))  # 204 is 0.8 opacity
-        draw.text((100, base_y + 70), "studiolabs.ai", 
-                 font=self.font_large, fill=(255, 255, 255, 204))
+        # Scale base_y position based on frame height
+        opacity = 230
+        base_y = int(frame_height * 0.14) + y_position
+        
+        # Scale shadow offset based on frame height
+        shadow_offset = max(2, int(frame_height * 0.003))
+        
+        # Scale x position based on frame width
+        x_position = int(frame_pil.size[0] * 0.05)  # 5% from left edge
+
+        # Rest of the method remains the same, but use x_position instead of fixed 100
+        draw.text((x_position + shadow_offset, base_y + shadow_offset), "AI shorts with", 
+                 font=self.font, fill=(0, 0, 0, opacity))
+        draw.text((x_position, base_y), "AI shorts with", 
+                 font=self.font, fill=(255, 255, 255, opacity))
+        
+        draw.text((x_position + shadow_offset, base_y + frame_height * 0.093 + shadow_offset), "studiolabs.ai", 
+                 font=self.font_large, fill=(0, 0, 0, opacity))
+        draw.text((x_position, base_y + frame_height * 0.093), "studiolabs.ai", 
+                 font=self.font_large, fill=(255, 255, 255, opacity))
         
         # Composite the frame and overlay
         frame_pil.paste(overlay, (0, 0), overlay)
@@ -103,6 +133,8 @@ class Watermark:
         # Cleanup
         video.close()
         original.close()
+        os.remove(temp_output)
+        os.remove(input_path)
 
     def process_videos_from_folder(self, input_folder: str, output_folder: str) -> None:
         """Process all videos in a folder"""
@@ -125,7 +157,7 @@ class Watermark:
                 input_path = os.path.join(input_folder, file)
                 output_path = os.path.join(output_folder, f"watermarked_{file}")
                 
-                print(f"Processing video {index}/{len(video_files)}: {file}")
+                print(f"Processing video {index}/{len(video_files)}: {file}\n\n")
                 self.process_video(input_path, output_path)
                 
             print("All videos processed successfully!")

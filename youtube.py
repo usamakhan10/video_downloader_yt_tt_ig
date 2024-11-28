@@ -69,6 +69,22 @@ def download_channel_videos(channel_url,download_shorts=True,download_videos=Tru
     # except Exception as e:
     #     print(f"An error occurred: {str(e)}")
 
+
+def generate_video_list(channel_name, videos_folder="tiktok_downloads/"):
+    """Generate a text file listing all video titles in the videos folder"""
+    video_files = [f for f in os.listdir(videos_folder) if f.endswith('.mp4')]
+    os.makedirs(f"{videos_folder}", exist_ok=True)
+    with open(f'{videos_folder}/video_list_{channel_name}.txt', 'w', encoding='utf-8') as f:
+        for idx, video in enumerate(video_files, 1):
+            # Remove .mp4 extension and format the line
+            title = video.replace('.mp4', '')
+            f.write(f"Day_{idx} {title}\n")
+            os.rename(f"{videos_folder}/{video}", f"{videos_folder}/day_{idx}_{title}.mp4")
+    
+    print(f"Video list has been generated in video_list_{channel_name}.txt")
+    
+
+
 if __name__ == "__main__":
     channel_url = "@Darklavia"
     download_channel_videos(channel_url,download_shorts=True,download_videos=False)
@@ -76,3 +92,4 @@ if __name__ == "__main__":
     folder_path = "youtube_downloads/"+channel_url.replace("@","")
     watermark.process_videos_from_folder(folder_path,folder_path)
     clean_title(folder_path)
+    generate_video_list(channel_url.replace("@",""),folder_path)
